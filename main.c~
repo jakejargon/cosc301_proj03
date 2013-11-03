@@ -13,11 +13,11 @@ int main(int argc, char **argv) {
     void *m2 = malloc(100); // should allocate 128 bytes
     //free(m1);
     //dump_memory_map();
-    void *m3 = malloc(56);  // should allocate 64 bytes
-    void *m4 = malloc(11);  // should allocate 32 bytes
+    //void *m3 = malloc(56);  // should allocate 64 bytes
+    //void *m4 = malloc(11);  // should allocate 32 bytes
     //free(m3);
-    void *m5 = malloc(30);  // should allocate 64 bytes
-    void *m6 = malloc(120); // should allocate 128 bytes
+    //void *m5 = malloc(30);  // should allocate 64 bytes
+    //void *m6 = malloc(120); // should allocate 128 bytes
     //free(m2);
     return 0;
 }

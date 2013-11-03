@@ -82,7 +82,7 @@ void *malloc(size_t request_size) {
 		}
 		else {
 		//if we have split this further, have the offset point to the block to the right of it
-		block_to_allocate[((size/4)+1)] = size;
+		block_to_allocate[(size/4)+1] = size;
 		}
 	block_to_allocate[0] = size;
 	block_to_allocate[1] = size; //we will change this
@@ -113,32 +113,42 @@ void dump_memory_map(void) {
 	
 	printf("***dumping memory map***\n");
 	int offset = (freelist - (uint32_t*)heap_begin) * sizeof(int);
-	int free_index = 0;
 	if (offset) {
 		printf("block size: %d, offset 0, allocated\n", offset);
 	}
-	//while we have not indexed past the heap and are not at the final free block
-	while (free_index+offset < HEAPSIZE) {
-		//run through the free list until we meet an allocated block/ the end of the heap
-		while (freelist[free_index/4] == freelist[(free_index+1)/4]) {
-			printf("block size: %d, offset %d, free\n", freelist[free_index/4], offset+free_index);
-			free_index += freelist[(free_index+1)/4];
-			if (offset+free_index == HEAPSIZE){
-			break;}
+	int free_index = 0;
+	 
+	while (offset < HEAPSIZE) {
+
+		//we have reached the end of free memory
+		if (freelist[(free_index/4) +1] == 0) {
+			printf("block size: %d, offset %d, free\n", freelist[(free_index)/4], offset);
+			offset += freelist[free_index/4];
+			//check if there is another allocated block
+			if (offset < HEAPSIZE) {
+				printf("block size: %d, offset %d, allocated\n", (HEAPSIZE - offset), offset);
+				break;
+			}
 		}
-		//print final free block
-		if (freelist[(free_index+1)/4] == 0) {
-			printf("block size: %d, offset %d, free\n", freelist[free_index/4], offset+free_index);
-			break;
+		
+		//there is a free block ahead of the current free block
+		else if (freelist[(free_index/4) +1] == freelist[free_index/4]) {
+			printf("block size: %d, offset %d, free\n", freelist[free_index/4], offset);
+			//add the size of the free block to get the beginning of the allocated block
+			offset += freelist[free_index/4];
+			free_index += freelist[free_index/4];
 		}
+		
+		//there is an allocated block ahead of the current free block	
 		else {
-			//print the next free block
-			printf("block size: %d, offset %d, free\n", (freelist[free_index/4]), offset+free_index);
-			//print the next allocated block
-			printf("block size: %d, offset %d, allocated\n", (freelist[(free_index+1)/4]-freelist[free_index]), offset+freelist[free_index]);
-			free_index += freelist[(free_index+1)/4];
+			printf("block size: %d, offset %d, free\n", freelist[free_index/4], offset);
+			//add the size of the free block to get the beginning of the allocated block
+			offset += freelist[free_index/4];
+			printf("block size: %d, offset %d, allocated\n", (freelist[(free_index/4)+1] - freelist[free_index/4]), offset);
+			//move the offset up again and change free_index to point to the next block
+			offset += (freelist[(free_index/4)+1] - freelist[free_index/4]);
+			free_index += freelist[(free_index/4)+1];
 		}
 	}
-
 }
 

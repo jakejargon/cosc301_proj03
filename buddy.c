@@ -92,12 +92,6 @@ void *malloc(size_t request_size) {
 	if (tempi == 0) {
 		freelist = &(freelist[(freelist[1])/4]);
 	}
-	 /*&& block_to_allocate[1]) {
-		freelist = &(freelist[(freelist[1])/4]);
-	}
-	else if (tempi == 0 && !block_to_allocate[1]) {
-		freelist = &(freelist[size/4]);
-	}*/
 	else {
 		freelist[(prev_pointer/4) + 1] = (freelist[(prev_pointer/4) + 1]) + size;
 	}
@@ -117,13 +111,34 @@ void free(void *memory_block) {
 
 void dump_memory_map(void) {
 	
-	int initial_chunk = (freelist - heapbegin) * sizeof(int);
-	if (initial_chunk) {
-		printf("block size: %d, offset 0, allocated\n", initial_chunk);
+	printf("***dumping memory map***\n");
+	int offset = (freelist - (uint32_t*)heap_begin) * sizeof(int);
+	int free_index = 0;
+	if (offset) {
+		printf("block size: %d, offset 0, allocated\n", offset);
 	}
-	int pointer = 0;
-	while (pointer != HEAPSIZE) {
-		
-		
+	//while we have not indexed past the heap and are not at the final free block
+	while (free_index+offset < HEAPSIZE) {
+		//run through the free list until we meet an allocated block/ the end of the heap
+		while (freelist[free_index/4] == freelist[(free_index+1)/4]) {
+			printf("block size: %d, offset %d, free\n", freelist[free_index/4], offset+free_index);
+			free_index += freelist[(free_index+1)/4];
+			if (offset+free_index == HEAPSIZE){
+			break;}
+		}
+		//print final free block
+		if (freelist[(free_index+1)/4] == 0) {
+			printf("block size: %d, offset %d, free\n", freelist[free_index/4], offset+free_index);
+			break;
+		}
+		else {
+			//print the next free block
+			printf("block size: %d, offset %d, free\n", (freelist[free_index/4]), offset+free_index);
+			//print the next allocated block
+			printf("block size: %d, offset %d, allocated\n", (freelist[(free_index+1)/4]-freelist[free_index]), offset+freelist[free_index]);
+			free_index += freelist[(free_index+1)/4];
+		}
+	}
+
 }
 

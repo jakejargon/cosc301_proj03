@@ -16,7 +16,6 @@ void *malloc(size_t);
 void free(void *);
 void dump_memory_map(void);
 
-
 //const int HEAPSIZE = (1*1024*1024); // 1 MB
 const int HEAPSIZE = (1024); //changed the heap to 1KB to make it easier for me
 const int MINIMUM_ALLOC = sizeof(int) * 2;
@@ -109,58 +108,77 @@ void *malloc(size_t request_size) {
 	return (void *)( block_to_allocate + 2);
 }
 
-void* combine_buddies(void* memory_block) {
+void free(void* memory_block) {
+	
+	printf("beginning to free...\n");
+	int lead_block;
+	int status;//use this variable to tell if buddy is left or right
+	uint32_t *heapbegin = heap_begin;
+	uint32_t *memblock = memory_block;
+	int size;
+	int lag_block;
 
-	int lead_block = 0;
-	//1 = odd, 2 = even
-	int status = 0
-	int *heapbegin = (int*) heap_begin;
-	int *memblock = (int*) memory_block;
-	int size = memblock[0];
+	while(1) {
 	
-	//check first block
-	if (&heapbegin == &memblock) {}
-	//lead_block has not encountered the memory block to be freed
-	else {
-		lead_block = size;
-		status = 1;
-		while (&heapbegin[lead_block/4] != &memblock) {
-			status += 1;
-			lead_block+= size;
-		}
-	}
+		//reinitialize
+		lead_block = 0;
+		status = 0;//use this variable to tell if buddy is left or right	
+		size = memblock[0];	
+		lag_block = 0;
 	
-	//exiting this conditional block, I should know whether to look for a buddy to the left or right (see status)
-	
-	//sift through freelist to find the freeblock to the left of memblock
-	lead_block = 0;
-	lag_block = 0;
-
-	lead_block = freelist[1];
-	while (&freelist[lead_block] < &memblock) {
-		lead_block += freelist[(lead_block/4) +1];
-		lag_block += freelist[(lag_block/4) +1];
-	}
-	//lag_block now has the index in freelist that is before memblock
-	//if the buddy is to the right
-	if ((status % 2 == 0) && (&freelist[lead_block/4] == &memblock[(size/4)+1]) {
-		//change the previous freelist entry to point to the newly freed block
-		freelist[(lag_block/4) +1] = freelist[(lead_block - size)/4];
-		//change the header info on the newly freed block
-		memblock[0] = size*2;
-		if (freelist[(lead_block/4) + 1] == 0) {
-			memblock[1] = 0;
-		}
+		//check first block
+		if (&heapbegin == &memblock) {}
+		//lead_block has not encountered the memory block to be freed
 		else {
-			memblock[1] = freelist[(lead_block/4) + 1] + size;
+			lead_block = size;
+			status = 1;
+			while (&heapbegin[lead_block/4] != &memblock[0]) {
+				status += 1;
+				lead_block+= size;
+			}
+		}
+	
+		//exiting this conditional block, I should know whether to look for a buddy to the left or right (see status)
+	
+		//sift through freelist to find the freeblock to the left of memblock
+		lead_block = 0;
+	
+	
+		lead_block = freelist[1];
+		while (&freelist[lead_block] < memblock) {
+			lead_block += freelist[(lead_block/4) +1];
+			lag_block += freelist[(lag_block/4) +1];
+		}
+		//lag_block now has the index in freelist that is before memblock
+		//if the buddy is to the right
+		if ((status % 2 == 0) && (&freelist[(lead_block/4) -1] == &memblock[size/4])) {
+			//change the previous freelist entry to point to the newly freed block
+			freelist[(lag_block/4) +1] -= size;
+			//change the header info on the newly freed block
+			memblock[0] = size*2;
+			if (freelist[(lead_block/4) + 1] == 0) {
+				memblock[1] = 0;
+			}
+			else {
+				memblock[1] = freelist[(lead_block/4) + 1] + size;
+			}
+			continue;
+		}
+		//buddy could be to the left
+		else if ((status % 2 == 1) && (&freelist[(lag_block/4) + (size/4) + 1] == &memblock[(size/4)])) {
+			freelist[lag_block/4] += size;
+			memblock = &freelist[lag_block/4];
+			continue;
+		}	
+		//there are no buddies
+		else {
+			//set offset for the previous freeblock
+			freelist[(lag_block/4) +1] = (memblock - &freelist[lag_block/4])*sizeof(int);
+			//create an offset on memblock
+			memblock[1] = (&freelist[lead_block/4] - memblock)*sizeof(int);
+			break;
 		}
 	}
-	else if ((status % 2 == 1) && (&freelist[lag_block/4] == &memblock[(size/4)+1]){
-		
-	
-void free(void *memory_block) {
-	
-
 }
 
 

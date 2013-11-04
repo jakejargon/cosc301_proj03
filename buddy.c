@@ -13,8 +13,9 @@
 
 // function declarations
 void *malloc(size_t);
-void free(void *);
+void myfree(void *);
 void dump_memory_map(void);
+
 
 //const int HEAPSIZE = (1*1024*1024); // 1 MB
 const int HEAPSIZE = (1024); //changed the heap to 1KB to make it easier for me
@@ -50,17 +51,12 @@ void *malloc(size_t request_size) {
 	while (request_size > powerof_two) {
 		powerof_two*=2;
 	}
-	printf("request size: %d\n", powerof_two);
 	int tempi = 0;
 	int prev_pointer = 0;
 	//go through the freelist using the offset and check if powerof_two will fit
 	while (freelist[tempi/4] < powerof_two) {
 		prev_pointer = tempi;
 		tempi += freelist[(tempi/4)+1];//modify tempi to point to the next freeblock by following the offset, hence the +1
-		//return NULL if there is no available space in memory
-		if ((freelist[(tempi/4)+1] == 0) && (freelist[tempi/4] < powerof_two)) {
-			return NULL;
-		}
 	}
 	
 	uint32_t* block_to_allocate = (freelist + (tempi/4));
@@ -100,17 +96,12 @@ void *malloc(size_t request_size) {
 	}
 	//modify the leftmost block
 	block_to_allocate[1] = 0; // write header offset, this will be 0 until free is called.
-	
-	printf("freelist info (size, offset): (%d, %d)\n", freelist[0], freelist[1]);
-	printf("allocated info (size, offset): (%d, %d)\n", block_to_allocate[0], block_to_allocate[1]);
-	printf("fin\n"); 
-	
+		
 	return (void *)( block_to_allocate + 2);
 }
 
-void free(void* memory_block) {
-	
-	printf("beginning to free...\n");
+void myfree(void *memory_block) {
+
 	int lead_block;
 	int status;//use this variable to tell if buddy is left or right
 	uint32_t *heapbegin = heap_begin;
@@ -181,7 +172,6 @@ void free(void* memory_block) {
 	}
 }
 
-
 void dump_memory_map(void) {
 	
 	printf("***dumping memory map***\n");
@@ -224,4 +214,5 @@ void dump_memory_map(void) {
 		}
 	}
 }
+
 
